@@ -83,8 +83,8 @@ const Sidebar = () => {
         <SidebarWithCollapsibleSections.NavItem selected={location.pathname === "/dashboard/messages"} icon="FeatherMessageCircle">
           <NavLink to="/dashboard/messages">Mensajes</NavLink>
         </SidebarWithCollapsibleSections.NavItem>
-        <SidebarWithCollapsibleSections.NavItem selected={location.pathname === "/dashboard/learning-hub"} icon="FeatherBookOpen">
-          <NavLink to="/dashboard/learning-hub">Aprendizaje</NavLink>
+        <SidebarWithCollapsibleSections.NavItem selected={location.pathname === "/learning"} icon="FeatherBookOpen">
+          <NavLink to="/learning">Aprendizaje</NavLink>
         </SidebarWithCollapsibleSections.NavItem>
       </div>
       

@@ -8,9 +8,11 @@ import {
 import { Button } from "@/subframe/components/Button";
 import { useState } from "react";
 import { FileUploader } from "@/components/FileUploader";
+import { ToggleGroup } from "@/subframe/components/ToggleGroup";
 
 const UploadScanModal = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [patientType, setPatientType] = useState("8e2f3aaa");
 
   const handleUpload = () => {
     // Handle file upload logic here
@@ -28,9 +30,21 @@ const UploadScanModal = () => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Upload Scan</DialogTitle>
+          <DialogTitle>Escanear</DialogTitle>
         </DialogHeader>
         <div className="mt-4">
+          <ToggleGroup
+            className="h-auto w-full flex-none"
+            value={patientType}
+            onValueChange={(value: string) => setPatientType(value)}
+          >
+            <ToggleGroup.Item icon={null} value="8e2f3aaa">
+              Nuevo paciente
+            </ToggleGroup.Item>
+            <ToggleGroup.Item icon={null} value="89251cf2">
+              Buscar paciente
+            </ToggleGroup.Item>
+          </ToggleGroup>
           <FileUploader />
           <div className="flex justify-end mt-6">
             <Button onClick={handleUpload}>Upload</Button>

@@ -28,7 +28,7 @@ export type Database = {
           id?: string
           patient_id: string
           status?: string
-          type: string
+          type?: string
         }
         Update: {
           created_at?: string
@@ -75,7 +75,7 @@ export type Database = {
           email?: string | null
           first_name: string
           id?: string
-          last_name: string
+          last_name?: string
           phone?: string | null
         }
         Update: {
@@ -241,7 +241,6 @@ export type TablesUpdate<
       }
       ? U
       : never
-    : never
 
 export type Enums<
   PublicEnumNameOrOptions extends

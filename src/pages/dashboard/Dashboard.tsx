@@ -6,26 +6,68 @@ import { Button } from "@/subframe/components/Button";
 import NewOrderModal from "@/components/modals/NewOrderModal";
 import UploadScanModal from "@/components/modals/UploadScanModal";
 import ChatBubble from "@/components/chat/ChatBubble";
-import { useState } from "react";
+import DetailViewDrawerWithFieldsAndTables from "@/components/drawers/DetailViewDrawerWithFieldsAndTables"; // Import DetailViewDrawerWithFieldsAndTables
+import { useState, useEffect, useRef } from "react";
 import { Calendar } from "@/subframe/components/Calendar";
 import { Table } from "@/subframe/components/Table";
 import { Badge } from "@/subframe/components/Badge";
 import { TextField } from "@/subframe/components/TextField";
 import { IconButton } from "@/subframe/components/IconButton";
+import { createClient } from '@supabase/supabase-js'; // Import Supabase client
+
+const supabaseUrl = 'https://vtihddyeadozaxrnmece.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0aWhkZHllYWRvemF4cm5tZWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk0NzAxOTMsImV4cCI6MjA1NTA0NjE5M30.P6WQsTSLDkWjlR542ZyeNI4ehWMoSUznN8_fT7i4KYc';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const Dashboard = () => {
-  const [orders, setOrders] = useState([
-    { id: "#001", type: "Corona", patient: "John Doe", status: "En progreso", dueDate: "2024-03-20" },
-  ]);
-
+  const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [sortOption, setSortOption] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [messages, setMessages] = useState<string[]>([]); // Add state for messages
+  const chatBubbleRef = useRef<HTMLButtonElement>(null); // Add ref for chat bubble button
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false); // Add state for drawer
+
+  const activeOrdersCount = orders.filter(order => order.status === "En progreso").length;
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('due_date', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching orders:", error);
+        return;
+      }
+
+      setOrders(data);
+    };
+
+    fetchOrders();
+  }, []);
 
   const handleAddNewOrder = (newOrder: {
     id: string; type: string; patient: string; status: string; dueDate: string;
   }) => {
-    setOrders((prev) => [...prev, newOrder]);
+    setOrders((prev) => [newOrder, ...prev]);
+  };
+
+  const handleChatClick = (order: any) => {
+    const message = `Hola, necesito soporte con la orden ID: ${order.id}, Tipo: ${order.type}, Paciente: ${order.patient}, Estado: ${order.status}, Fecha de Entrega: ${order.due_date}.`;
+    setMessages((prevMessages) => [...prevMessages, message]);
+    // Automatically open the chat bubble and send the message
+    setTimeout(() => {
+      if (chatBubbleRef.current) {
+        chatBubbleRef.current.click();
+      }
+    }, 0);
+  };
+
+  const handleDrawerOpen = () => {
+    setIsDrawerOpen(true);
   };
 
   const filteredOrders = orders
@@ -39,19 +81,30 @@ const Dashboard = () => {
       return 0;
     });
 
-    
+  const ordersPerPage = 5;
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const displayedOrders = filteredOrders.slice(
+    (currentPage - 1) * ordersPerPage,
+    currentPage * ordersPerPage
+  );
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
 
   return (
     <DashboardLayout>
-      
-        
       <div className="space-y-8 bg-white">
-
-         {/* Acciones rápidas */}
-       <div className="grid sm:grid-cols-8 gap-4 ">
+        {/* Acciones rápidas */}
+        <div className="flex gap-4">
           <NewOrderModal onAddOrder={handleAddNewOrder} />
           <UploadScanModal />
         </div>
+
         <div className="flex w-full flex-wrap items-start gap-4">
           <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4 shadow-sm">
             <span className="line-clamp-1 w-full text-caption-bold font-caption-bold text-subtext-color">
@@ -59,7 +112,7 @@ const Dashboard = () => {
             </span>
             <div className="flex w-full flex-col items-start gap-2">
               <span className="text-heading-2 font-heading-2 text-default-font">
-                10
+                {activeOrdersCount}
               </span>
               <Badge variant="success" icon="FeatherArrowUp">
                 13%
@@ -94,132 +147,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-    
-
-        <div className="flex w-full flex-wrap items-center gap-4">
-          <div className="flex grow shrink-0 basis-0 items-center gap-1">
-            <TextField variant="filled" label="" helpText="" icon="FeatherSearch">
-              <TextField.Input
-                placeholder="Buscar..."
-                value=""
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {}}
-              />
-            </TextField>
-            <Button
-              variant="neutral-tertiary"
-              iconRight="FeatherChevronDown"
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-            >
-              Últimos 7 días
-            </Button>
-            <IconButton onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}} />
-          </div>
-          <div className="flex items-center gap-2">
-            <IconButton
-              icon="FeatherRefreshCw"
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-            />
-            <IconButton
-              icon="FeatherSettings"
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-            />
-            <Button
-              icon="FeatherPlus"
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-            >
-              Añadir
-            </Button>
-          </div>
-        </div>
-
         {/* Órdenes recientes */}
         <div className="flex w-full flex-col items-start gap-8">
-          <div className="flex w-full items-center gap-4">
-            <div className="flex grow shrink-0 basis-0 items-center gap-2">
-              <SubframeCore.Popover.Root>
-                <SubframeCore.Popover.Trigger asChild={true}>
-                  <Button
-                    variant="neutral-secondary"
-                    iconRight="FeatherCalendar"
-                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                  >
-                    01/01/23
-                  </Button>
-                </SubframeCore.Popover.Trigger>
-                <SubframeCore.Popover.Portal>
-                  <SubframeCore.Popover.Content
-                    side="bottom"
-                    align="start"
-                    sideOffset={4}
-                    asChild={true}
-                  >
-                    <div className="flex flex-col items-start gap-1 rounded-md border border-solid border-neutral-border bg-default-background px-3 py-3 shadow-lg">
-                      <Calendar
-                        mode={"single"}
-                        selected={new Date()}
-                        onSelect={(date: Date | undefined) => {}}
-                      />
-                    </div>
-                  </SubframeCore.Popover.Content>
-                </SubframeCore.Popover.Portal>
-              </SubframeCore.Popover.Root>
-              <span className="text-caption-bold font-caption-bold text-default-font">
-                to
-              </span>
-              <SubframeCore.Popover.Root>
-                <SubframeCore.Popover.Trigger asChild={true}>
-                  <Button
-                    variant="neutral-secondary"
-                    iconRight="FeatherCalendar"
-                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                  >
-                    12/31/23
-                  </Button>
-                </SubframeCore.Popover.Trigger>
-                <SubframeCore.Popover.Portal>
-                  <SubframeCore.Popover.Content
-                    side="bottom"
-                    align="start"
-                    sideOffset={4}
-                    asChild={true}
-                  >
-                    <div className="flex flex-col items-start gap-1 rounded-md border border-solid border-neutral-border bg-default-background px-3 py-3 shadow-lg">
-                      <Calendar
-                        mode={"single"}
-                        selected={new Date()}
-                        onSelect={(date: Date | undefined) => {}}
-                      />
-                    </div>
-                  </SubframeCore.Popover.Content>
-                </SubframeCore.Popover.Portal>
-              </SubframeCore.Popover.Root>
-              <Button
-                variant="neutral-secondary"
-                iconRight="FeatherChevronDown"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-              >
-                Filtrar por producto
-              </Button>
-              <Button
-                variant="neutral-secondary"
-                iconRight="FeatherChevronDown"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-              >
-                Personalizar vista
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="neutral-tertiary"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-              >
-                Reportar problema
-              </Button>
-              <Button onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}>
-                Descargar órdenes
-              </Button>
-            </div>
-          </div>
           <Table
             header={
               <Table.HeaderRow>
@@ -228,198 +157,80 @@ const Dashboard = () => {
                 <Table.HeaderCell>Paciente</Table.HeaderCell>
                 <Table.HeaderCell>Fecha de Orden</Table.HeaderCell>
                 <Table.HeaderCell>Items</Table.HeaderCell>
+                <Table.HeaderCell>Acciones</Table.HeaderCell> {/* Add Actions column */}
               </Table.HeaderRow>
             }
           >
-            <Table.Row>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <div className="flex items-center gap-4">
-                  <img
-                    className="h-8 w-12 flex-none rounded-sm object-cover"
-                    src="https://res.cloudinary.com/subframe/image/upload/v1724690087/uploads/302/w2ra2yihpofsdy1h4uhy.png"
-                  />
-                  <div className="flex flex-col items-start">
-                    <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
-                      ORD-1001
-                    </span>
-                    <span className="text-caption font-caption text-subtext-color">
-                      Confirmado
-                    </span>
+            {displayedOrders.map((order) => (
+              <Table.Row key={order.id}>
+                <Table.Cell className="h-16 grow shrink-0 basis-0">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-start">
+                      <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
+                        {order.id}
+                      </span>
+                      <span className="text-caption font-caption text-subtext-color">
+                        {order.status}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <Badge variant="success">Pagado</Badge>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  Alice Johnson
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  15 de octubre de 2023
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  3 Artículos
-                </span>
-              </Table.Cell>
-            </Table.Row>
-            <Table.Row>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <div className="flex items-center gap-4">
-                  <img
-                    className="h-8 w-12 flex-none rounded-sm object-cover"
-                    src="https://res.cloudinary.com/subframe/image/upload/v1723780878/uploads/302/mdjcme9tm4svgmkjv4zf.png"
+                </Table.Cell>
+                <Table.Cell className="h-16 grow shrink-0 basis-0">
+                  <Badge variant="success">{order.status}</Badge>
+                </Table.Cell>
+                <Table.Cell className="h-16 grow shrink-0 basis-0">
+                  <span className="whitespace-nowrap text-body font-body text-neutral-500">
+                    {order.patient}
+                  </span>
+                </Table.Cell>
+                <Table.Cell className="h-16 grow shrink-0 basis-0">
+                  <span className="whitespace-nowrap text-body font-body text-neutral-500">
+                    {order.due_date}
+                  </span>
+                </Table.Cell>
+                <Table.Cell className="h-16 grow shrink-0 basis-0">
+                  <span className="whitespace-nowrap text-body font-body text-neutral-500">
+                    {order.type}
+                  </span>
+                </Table.Cell>
+                <Table.Cell className="h-16 grow shrink-0 basis-0">
+                  <IconButton
+                    icon="FeatherMessageSquare"
+                    onClick={() => handleChatClick(order)}
                   />
-                  <div className="flex flex-col items-start">
-                    <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
-                      ORD-1002
-                    </span>
-                    <span className="text-caption font-caption text-subtext-color">
-                      Procesando
-                    </span>
-                  </div>
-                </div>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <Badge variant="success">Pendiente</Badge>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  Tom Carter
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  20 de octubre de 2023
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  2 Artículos
-                </span>
-              </Table.Cell>
-            </Table.Row>
-            <Table.Row>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <div className="flex items-center gap-4">
-                  <img
-                    className="h-8 w-12 flex-none rounded-sm object-cover"
-                    src="https://res.cloudinary.com/subframe/image/upload/v1724690133/uploads/302/tswlwr0qfwwhkgbjwplw.png"
+                  <IconButton
+                    icon="FeatherArrowRight"
+                    onClick={handleDrawerOpen}
                   />
-                  <div className="flex flex-col items-start">
-                    <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
-                      ORD-1003
-                    </span>
-                    <span className="text-caption font-caption text-subtext-color">
-                      Enviado
-                    </span>
-                  </div>
-                </div>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <Badge variant="success">Pagado</Badge>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  Laura Green
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  25 de octubre de 2023
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  1 Artículo
-                </span>
-              </Table.Cell>
-            </Table.Row>
-            <Table.Row>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <div className="flex items-center gap-4">
-                  <img
-                    className="h-8 w-12 flex-none rounded-sm object-cover"
-                    src="https://res.cloudinary.com/subframe/image/upload/v1723780853/uploads/302/h3glkflohcjajdl3lah6.png"
-                  />
-                  <div className="flex flex-col items-start">
-                    <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
-                      ORD-1004
-                    </span>
-                    <span className="text-caption font-caption text-subtext-color">
-                      Entregado
-                    </span>
-                  </div>
-                </div>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <Badge variant="success">Completo</Badge>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  Mark Brown
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  27 de octubre de 2023
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  5 Artículos
-                </span>
-              </Table.Cell>
-            </Table.Row>
-            <Table.Row>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <div className="flex items-center gap-4">
-                  <img
-                    className="h-8 w-12 flex-none rounded-sm object-cover"
-                    src="https://res.cloudinary.com/subframe/image/upload/v1723780859/uploads/302/hh4s5xjmsigiehqkb1uh.png"
-                  />
-                  <div className="flex flex-col items-start">
-                    <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
-                      ORD-1005
-                    </span>
-                    <span className="text-caption font-caption text-subtext-color">
-                      Pendiente
-                    </span>
-                  </div>
-                </div>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <Badge variant="warning">Procesando</Badge>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  Anna White
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  30 de octubre de 2023
-                </span>
-              </Table.Cell>
-              <Table.Cell className="h-16 grow shrink-0 basis-0">
-                <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  2 Artículos
-                </span>
-              </Table.Cell>
-            </Table.Row>
+                </Table.Cell>
+              </Table.Row>
+            ))}
           </Table>
         </div>
-
-        
-
-        
+        <div className="flex w-full items-center justify-center gap-4">
+          <span className="grow shrink-0 basis-0 text-body font-body text-subtext-color">
+            Mostrando {currentPage} – {totalPages} de {filteredOrders.length}
+          </span>
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="neutral-secondary"
+              icon="FeatherArrowLeft"
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+            />
+            <Button
+              variant="neutral-secondary"
+              icon="FeatherArrowRight"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+            />
+          </div>
+        </div>
 
         {/* Burbuja de Chat */}
-        <ChatBubble />
+        <ChatBubble prewrittenMessage={messages[messages.length - 1]} messages={messages} setMessages={setMessages} chatBubbleRef={chatBubbleRef} /> {/* Add ChatBubble component */}
+        {/* Detail View Drawer */}
+        <DetailViewDrawerWithFieldsAndTables open={isDrawerOpen} onOpenChange={setIsDrawerOpen} /> {/* Add DetailViewDrawerWithFieldsAndTables component */}
       </div>
     </DashboardLayout>
   );

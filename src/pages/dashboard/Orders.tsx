@@ -2,26 +2,65 @@ import * as SubframeCore from "@subframe/core";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Table } from "@/subframe/components/Table";
 import { Badge } from "@/subframe/components/Badge";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TextField } from "@/subframe/components/TextField";
 import { Button } from "@/subframe/components/Button";
 import { IconButton } from "@/subframe/components/IconButton";
 import { DropdownMenu } from "@/subframe/components/DropdownMenu";
 import { Calendar } from "@/subframe/components/Calendar";
+import NewOrderModal from "@/components/modals/NewOrderModal";
+import ChatBubble from "@/components/chat/ChatBubble"; // Import ChatBubble
+import { createClient } from '@supabase/supabase-js'; // Import Supabase client
+
+const supabaseUrl = 'https://vtihddyeadozaxrnmece.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0aWhkZHllYWRvemF4cm5tZWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk0NzAxOTMsImV4cCI6MjA1NTA0NjE5M30.P6WQsTSLDkWjlR542ZyeNI4ehWMoSUznN8_fT7i4KYc';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const Orders = () => {
-  const [orders, setOrders] = useState([
-    { id: "#001", type: "Crown", patient: "John Doe", status: "In Progress", dueDate: "2024-03-20" },
-    // ...other orders...
-  ]);
+  const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false); // Add state for modal
+  const [messages, setMessages] = useState<string[]>([]); // Add state for messages
+  const chatBubbleRef = useRef<HTMLButtonElement>(null); // Add ref for chat bubble button
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*');
+
+      if (error) {
+        console.error("Error fetching orders:", error);
+        return;
+      }
+
+      setOrders(data);
+    };
+
+    fetchOrders();
+  }, []);
+
+  const handleAddOrder = (newOrder: any) => {
+    setOrders((prevOrders) => [...prevOrders, newOrder]);
+  };
+
+  const handleChatClick = (order: any) => {
+    const message = `Hola, necesito soporte con la orden ID: ${order.id}, Tipo: ${order.type}, Paciente: ${order.patient}, Estado: ${order.status}, Fecha de Entrega: ${order.due_date}.`;
+    setMessages((prevMessages) => [...prevMessages, message]);
+    // Automatically open the chat bubble and send the message
+    setTimeout(() => {
+      if (chatBubbleRef.current) {
+        chatBubbleRef.current.click();
+      }
+    }, 0);
+  };
 
   const filteredOrders = orders.filter(order =>
     order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.patient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.patient?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.dueDate.toLowerCase().includes(searchTerm.toLowerCase())
+    order.due_date.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -37,57 +76,22 @@ const Orders = () => {
                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(event.target.value)}
                 />
               </TextField>
-              <Button
-                variant="neutral-tertiary"
-                iconRight="FeatherChevronDown"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-              >
-                Últimos 7 días
-              </Button>
+              
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <IconButton
                 icon="FeatherRefreshCw"
                 onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
               />
-              <IconButton
-                icon="FeatherSettings"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+             
+              <NewOrderModal
+                onAddOrder={handleAddOrder}
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)} // Close modal
               />
-              <SubframeCore.DropdownMenu.Root>
-                <SubframeCore.DropdownMenu.Trigger asChild={true}>
-                  <Button
-                    variant="neutral-secondary"
-                    iconRight="FeatherChevronDown"
-                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
-                  >
-                    Nuevo
-                  </Button>
-                </SubframeCore.DropdownMenu.Trigger>
-                <SubframeCore.DropdownMenu.Portal>
-                  <SubframeCore.DropdownMenu.Content
-                    side="bottom"
-                    align="start"
-                    sideOffset={4}
-                    asChild={true}
-                  >
-                    <DropdownMenu>
-                      <DropdownMenu.DropdownItem>Favorito</DropdownMenu.DropdownItem>
-                      <DropdownMenu.DropdownItem icon="FeatherPlus">
-                        Agregar
-                      </DropdownMenu.DropdownItem>
-                      <DropdownMenu.DropdownItem icon="FeatherEdit2">
-                        Editar
-                      </DropdownMenu.DropdownItem>
-                      <DropdownMenu.DropdownItem icon="FeatherTrash">
-                        Eliminar
-                      </DropdownMenu.DropdownItem>
-                    </DropdownMenu>
-                  </SubframeCore.DropdownMenu.Content>
-                </SubframeCore.DropdownMenu.Portal>
-              </SubframeCore.DropdownMenu.Root>
             </div>
           </div>
+          
           <div className="flex w-full items-center gap-4">
             <div className="flex grow shrink-0 basis-0 items-center gap-2">
               <SubframeCore.Popover.Root>
@@ -166,6 +170,7 @@ const Orders = () => {
                 <Table.HeaderCell>Paciente</Table.HeaderCell>
                 <Table.HeaderCell>Fecha de Orden</Table.HeaderCell>
                 <Table.HeaderCell>Artículos</Table.HeaderCell>
+                <Table.HeaderCell>Acciones</Table.HeaderCell> {/* Add Actions column */}
               </Table.HeaderRow>
             }
           >
@@ -193,7 +198,7 @@ const Orders = () => {
                 </Table.Cell>
                 <Table.Cell className="h-16 grow shrink-0 basis-0">
                   <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                    {order.dueDate}
+                    {order.due_date}
                   </span>
                 </Table.Cell>
                 <Table.Cell className="h-16 grow shrink-0 basis-0">
@@ -201,11 +206,18 @@ const Orders = () => {
                     {order.type}
                   </span>
                 </Table.Cell>
+                <Table.Cell className="h-16 grow shrink-0 basis-0">
+                  <IconButton
+                    icon="FeatherMessageSquare"
+                    onClick={() => handleChatClick(order)}
+                  />
+                </Table.Cell>
               </Table.Row>
             ))}
           </Table>
         </div>
       </div>
+      <ChatBubble prewrittenMessage={messages[messages.length - 1]} messages={messages} setMessages={setMessages} chatBubbleRef={chatBubbleRef} /> {/* Add ChatBubble component */}
     </DashboardLayout>
   );
 };

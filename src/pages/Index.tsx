@@ -212,9 +212,9 @@ function UntitledPage2() {
             <PricingPlanCard
               className="h-auto min-w-[128px] max-w-[384px] grow shrink-0 basis-0"
               title="Básico"
-              amount="$10,000.00"
+              amount="$1,999.00"
               label="por mes"
-              description="Lo básico para que tu equipo comience hasta 10 usuarios."
+              description="Ideal para pequeñas prácticas dentales."
               actions={
                 <Button
                   className="h-10 w-full flex-none"
@@ -228,27 +228,27 @@ function UntitledPage2() {
               }
             >
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
-                Hasta 10 miembros del equipo
+                Hasta 2 miembros del equipo
               </PricingPlanCard.FeatureItem>
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
-                Hasta 5,000 solicitudes al día
+                Hasta 100 escaneos al mes
               </PricingPlanCard.FeatureItem>
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
-                Hasta 1GB de límite máximo de archivo
+                Hasta 50GB de límite máximo de archivos
               </PricingPlanCard.FeatureItem>
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
-                Retención de registros de 7 días
+                Retención de registros de 30 días
               </PricingPlanCard.FeatureItem>
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
-                Acceso a soporte 24/7
+                Acceso a soporte 8/5
               </PricingPlanCard.FeatureItem>
             </PricingPlanCard>
             <PricingPlanCard
               className="h-auto min-w-[128px] max-w-[384px] grow shrink-0 basis-0"
               title="Pro"
-              amount="$30"
+              amount="$4,999.00"
               label="por mes"
-              description="Lo básico para que tu equipo comience hasta 10 usuarios."
+              description="Para prácticas dentales medianas."
               actions={
                 <Button
                   className="h-10 w-full flex-none"
@@ -262,16 +262,16 @@ function UntitledPage2() {
               }
             >
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
-                Hasta 10 miembros del equipo
+                Miembros ilimitados del equipo
               </PricingPlanCard.FeatureItem>
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
-                Hasta 5,000 solicitudes al día
+                Hasta 1000 escaneos al mes
               </PricingPlanCard.FeatureItem>
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
-                Hasta 1GB de límite máximo de archivo
+                Hasta 250GB de límite máximo de archivos
               </PricingPlanCard.FeatureItem>
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
-                Retención de registros de 7 días
+                Retención de registros de 90 días
               </PricingPlanCard.FeatureItem>
               <PricingPlanCard.FeatureItem className="h-auto w-full flex-none">
                 Acceso a soporte 24/7
