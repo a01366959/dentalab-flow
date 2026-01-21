@@ -1,16 +1,22 @@
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/dashboard/Dashboard";
+import OrdersPage from "./pages/dashboard/orders";
+import NewOrderPage from "./pages/dashboard/orders/new";
+import LearningHubPage from "./pages/dashboard/learning";
+import MessagesPage from "./pages/dashboard/messages";
 import NotFound from "./pages/NotFound";
 import Orders from "./pages/dashboard/Orders";
 import Patients from "./pages/dashboard/Patients";
 import PatientDetail from "./pages/dashboard/PatientDetail";
 import Learning from "@/pages/learning/Learning";
+import OrderDetailsPage from "./pages/dashboard/orders/[id]";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +35,11 @@ const App = () => (
           <Route path="/dashboard/patients/:patientId" element={<PatientDetail />} />
           <Route path="/learning" element={<Learning />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/dashboard/orders/new" element={<NewOrderPage />} />
+          <Route path="/dashboard/orders/:id" element={<OrderDetailsPage />} />
+          <Route path="/dashboard/orders" element={<OrdersPage />} />
+          <Route path="/dashboard/learning" element={<LearningHubPage />} />
+          <Route path="/dashboard/messages" element={<MessagesPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

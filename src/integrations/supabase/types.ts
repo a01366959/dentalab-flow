@@ -11,34 +11,56 @@ export type Database = {
     Tables: {
       orders: {
         Row: {
+          additional_info: string | null
+          additional_notes: string | null
           created_at: string
           dentist_id: string
           details: Json | null
           due_date: string | null
+          email: string | null
           id: string
+          lastname: string | null
+          name: string | null
           patient_id: string
+          phone: string | null
           status: string
           type: string
+          uploads: Json | null
         }
         Insert: {
+          additional_info?: string | null
+          additional_notes?: string | null
           created_at?: string
           dentist_id: string
           details?: Json | null
           due_date?: string | null
+          email?: string | null
           id?: string
+          lastname?: string | null
+          name?: string | null
           patient_id: string
+          phone?: string | null
           status?: string
           type?: string
+          type: string
+          uploads?: Json | null
         }
         Update: {
+          additional_info?: string | null
+          additional_notes?: string | null
           created_at?: string
           dentist_id?: string
           details?: Json | null
           due_date?: string | null
+          email?: string | null
           id?: string
+          lastname?: string | null
+          name?: string | null
           patient_id?: string
+          phone?: string | null
           status?: string
           type?: string
+          uploads?: Json | null
         }
         Relationships: [
           {
